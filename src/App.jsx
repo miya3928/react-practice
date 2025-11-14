@@ -3,9 +3,12 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import Message from '/component/Message.jsx'
-
+import Profile from '/component/Profile.jsx'
 function App() {
   const [count, setCount] = useState(0)
+  const items = ["りんご", "みかん", "ぶどう"];
+  const [text, setText] = useState("");
+ 
 
   return (
     <>
@@ -30,13 +33,23 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
       <div>
-      <h2>自分の追加コンテンツ</h2>
-      <p>Reactの練習中です！</p>
-    </div>
-    <div>
-      <h1>コンポーネント練習です</h1>
-      <Message text="これは別ファイルのコンポーネントです！" />
-    </div>
+        <Profile />
+      </div>
+      <div>
+        <h1>コンポーネント練習です</h1>
+        <Message text="これは別ファイルのコンポーネントです！" />
+      </div>
+      <ul>
+       {items.map((item) => (
+         <li key={item}>{item}</li>
+       ))}
+      </ul>
+      <input
+       type="text"
+       value={(Text)}
+       onChange={(e) => setText(e.target.value)}
+  />
+      <p>入力中の文字: {text}</p>
     </>
   )
 }
