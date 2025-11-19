@@ -2,6 +2,9 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import Header from "/components/Header.jsx";
+import Main from "/components/Main.jsx";
+import Footer from "/components/Footer.jsx";
 import Message from '/component/Message.jsx'
 import Profile from '/component/Profile.jsx'
 
@@ -22,23 +25,8 @@ function App() {
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <h1>Vite + React</h1>
-
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-      </div>
-
+      <Header />
+      <Main />
       <Profile />
 
       <h2>コンポーネント練習です</h2>
@@ -72,6 +60,8 @@ function App() {
           <li key={index}>{t}</li>
         ))}
       </ul>
+
+      <Footer />
     </>
   )
 }
