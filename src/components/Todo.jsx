@@ -10,6 +10,10 @@ export default function Todo() {
     setInput("");
   };
 
+  const deleteTodo = (index) => {
+    setTodos(todos.filter((_, i) => i !== index) );
+  };
+
   return (
     <div>
       <input
@@ -21,7 +25,12 @@ export default function Todo() {
 
       <ul>
         {todos.map((t, index) => (
-          <li key={index}>{t}</li>
+          <li key={index}>
+            {t}
+            <button onClick={() => deleteTodo(index)} style={{ marginLeft: "10px" }}>
+              削除
+            </button>
+          </li>
         ))}
       </ul>
     </div>
