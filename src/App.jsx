@@ -13,11 +13,12 @@ function App() {
   return (
     <>
       <Header />
-      <Main />
-      <Profile />
+      <Main>
+        <Profile />
 
       <h2>コンポーネント練習です</h2>
       <Message text="これは別ファイルのコンポーネントです！" />
+      </Main>
 
       <Footer />
     </>
