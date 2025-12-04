@@ -18,6 +18,14 @@ export default function Todo() {
     setInput("");
   };
 
+  const toggleDone = (id) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, done: !todo.done } : todo
+      )
+    );
+  };
+
   const deleteTodo = (id) => {
     setTodos(todos.filter((todo) => todo.id !== id));
   };
@@ -64,9 +72,11 @@ export default function Todo() {
       <ul className="space-y-3">
         {todos.map((todo) => (
           <li
-            key={todo.id}
-            className="flex justify-between items-center p-3 border rounded"
-          >
+          key={todo.id}
+          className={`flex justify-between items-center p-3 border rounded ${
+            todo.done ? "bg-gray-700 text-gray-300 line-through decoration-2 opacity-60" : ""
+          }`}
+        >
             {editingId === todo.id ? (
               <div className="flex gap-2 w-full">
                 <input
@@ -89,14 +99,39 @@ export default function Todo() {
               </div>
             ) : (
               <>
-                <span>{todo.text}</span>
+                {/* テキスト表示エリア */}
+                <span
+                  className={`flex-1 ${
+                    todo.done ? "line-through text-gray-500" : ""
+                  }`}
+                >
+                  {todo.text}
+                </span>
+
                 <div className="flex gap-2">
+                  {/* 完了 toggle */}
                   <button
-                    onClick={() => startEdit(todo)}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    onClick={() => toggleDone(todo.id)}
+                    className={`px-3 py-1 text-white rounded ${
+                      todo.done
+                        ? "bg-gray-500 hover:bg-gray-600"
+                        : "bg-green-500 hover:bg-green-600"
+                    }`}
                   >
-                    編集
+                    {todo.done ? "未完了に戻す" : "完了"}
                   </button>
+
+                  {/* 編集 */}
+                  {!todo.done && (
+                    <button
+                      onClick={() => startEdit(todo)}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    >
+                      編集
+                    </button>
+                  )}
+
+                  {/* 削除 */}
                   <button
                     onClick={() => deleteTodo(todo.id)}
                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
