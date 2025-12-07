@@ -1,4 +1,6 @@
+import Profile from "./Profile";
 import Todo from "./Todo";
+
 
 export default function Main() {
   return (
@@ -8,6 +10,7 @@ export default function Main() {
   Tailwind OK!!
 </h1>
     <h2>メインコンテンツ</h2>
+    <Profile />
 
     <section>
       <h3>ToDo リスト</h3>

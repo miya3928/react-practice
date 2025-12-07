@@ -5,7 +5,6 @@ import './index.css'
 import Header from "./components/Header.jsx";
 import Main from "./components/Main.jsx";
 import Footer from "./components/Footer.jsx";
-import Message from './components/Message.jsx'
 import Profile from './components/Profile.jsx'
 
 function App() {
@@ -14,11 +13,6 @@ function App() {
     <>
       <Header />
       <Main>
-        <Profile />
-
-
-      <h2>コンポーネント練習です</h2>
-      <Message text="これは別ファイルのコンポーネントです！" />
       </Main>
 
       <Footer />
