@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 // 💡 TodoItemコンポーネントをimport
 import TodoItem from "./TodoItem.jsx";
+import { AnimatePresence } from 'framer-motion';
 
 // localStorageから初期データを読み込むヘルパー関数
 const getInitialTodos = () => {
@@ -139,6 +140,7 @@ export default function Todo() {
 
       {/* 3. ToDo リスト */}
       <ul className="space-y-3">
+      <AnimatePresence>
         {todos.map((todo) => (
           <TodoItem
             key={todo.id}
@@ -159,6 +161,7 @@ export default function Todo() {
             setEditingDueDate={setEditingDueDate}
           />
         ))}
+        </AnimatePresence>
       </ul>
     </div>
   );

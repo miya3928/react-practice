@@ -1,5 +1,7 @@
 // TodoItem.jsx
 import React from 'react';
+import { motion } from 'framer-motion';
+
 
 // 優先度表示用のスタイルヘルパー
 const getPriorityStyles = (priority) => {
@@ -15,19 +17,18 @@ const getPriorityStyles = (priority) => {
     }
 };
 
-export default function TodoItem({ 
-    todo, 
-    toggleDone, 
-    deleteTodo, 
+export default function TodoItem({
+    todo,
+    toggleDone,
+    deleteTodo,
     startEdit,
-    saveEdit, 
+    saveEdit,
     cancelEdit,
-    
     // 編集ステート（Todo.jsxからPropsとして渡される）
-    editingId, 
-    editingText, 
-    setEditingText, 
-    editingPriority, 
+    editingId,
+    editingText,
+    setEditingText,
+    editingPriority,
     setEditingPriority,
     editingDueDate,
     setEditingDueDate,
@@ -46,8 +47,16 @@ export default function TodoItem({
     };
 
     return (
-        <li
-            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded ${
+      <motion.li
+        // 🌟 アイテムがリストから削除されるときのアニメーション
+        initial={{ opacity: 0, height: 0 }} // 初期状態（見えない）
+        animate={{ opacity: 1, height: 'auto' }} // 表示された状態（見える）
+        exit={{ opacity: 0, height: 0 }} // 削除されるとき（見えなくなる）
+        layout // リストの他のアイテムが滑らかに移動するのを助ける
+        className={`...`}
+    >
+        <section
+            className={`transition duration-300 ease-in-out flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded ${
                 todo.done ? "bg-gray-100 text-gray-400 opacity-70" : "bg-white shadow"
             }`}
         >
@@ -60,7 +69,6 @@ export default function TodoItem({
                         value={editingText}
                         onChange={(e) => setEditingText(e.target.value)}
                     />
-                    
                     {/* 2. 優先度と期日の編集 */}
                     <div className="flex gap-2 text-sm">
                         <select
@@ -99,7 +107,6 @@ export default function TodoItem({
             ) : (
                 // 🌟 表示モード 🌟
                 <div className="flex-1 w-full flex flex-col sm:flex-row sm:items-center gap-3">
-                    
                     {/* テキスト */}
                     <span className={`flex-1 font-medium text-gray-800 ${todo.done ? "line-through" : ""}`}>
                         {todo.text}
@@ -117,7 +124,6 @@ export default function TodoItem({
                                 📅 {todo.dueDate}
                             </span>
                         )}
-                        
                         {/* アクションボタン */}
                         <div className="flex gap-2 ml-4">
                              {/* 完了 toggle */}
@@ -154,6 +160,7 @@ export default function TodoItem({
                     </div>
                 </div>
             )}
-        </li>
+        </section>
+      </motion.li>
     );
 }
