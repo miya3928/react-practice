@@ -34,6 +34,25 @@ export default function Todo() {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
 
+  // 🌟 新規追加: ソート基準を保持するステート
+  const [sortBy, setSortBy] = useState("created_at");
+  // ソートロジックの定義
+  const sortedTodos = [...todos];
+  // ソート処理の実行
+  if(sortBy === "priority"){
+    const priorityOrder ={ high: 3, medium: 2, low: 1 };
+    sortedTodos.sort((a,b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
+  }else if (sortBy === "dueDate"){
+    sortedTodos.sort((a,b) => {
+      const dateA =a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31');
+      const dateB =b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
+      return dateA - dateB;
+    });
+  }else if (sortBy === "created_at") {
+    sortedTodos.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+  // 完了済みのアイテムを常にリストの最後に移動
+  sortedTodos.sort((a,b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
   // --- CRUD 操作 ---
 
   const addTodo = () => {
@@ -135,13 +154,28 @@ export default function Todo() {
                 className="border rounded px-2 py-1 flex-1"
             />
         </div>
+      </div>
 
+      {/* 🌟 4. ソート機能の追加 */}
+      <div className="mb-6 justify-end items-center gap-2 text-sm">
+        <label htmlFor="sort-select" className="text-gray-500">
+          並べ替え：
+        </label>
+          <select
+            id="sort-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="border rounded px-2 py-1 bg-white">
+          <option value="created_at">作成日（新しい→古い）</option>
+          <option value="dueDate">期日(早い→遅い)</option>
+          <option value="priority">優先度（高→低）</option>
+        </select>
       </div>
 
       {/* 3. ToDo リスト */}
       <ul className="space-y-3">
       <AnimatePresence>
-        {todos.map((todo) => (
+        {sortedTodos.map((todo) => (
           <TodoItem
             key={todo.id}
             todo={todo}
