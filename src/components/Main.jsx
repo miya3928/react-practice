@@ -1,8 +1,7 @@
-// Main.jsx
 import Profile from "./Profile";
-import Todo from "./Todo";
+// 💡 Todo の直接インポートは不要になりました
 
-export default function Main({ className }) {
+export default function Main({ children, className }) { // 👈 children を受け取る
   return (
     <main className={`p-8 ${className}`}>
         <div className="max-w-4xl mx-auto">
@@ -13,9 +12,10 @@ export default function Main({ className }) {
                     <h3 className="text-xl font-medium mb-3">プロフィール</h3>
                     <Profile />
                 </aside>
+                {/* 2. メインコンテンツエリア (ログイン or Todoリスト) */}
                 <div className="md:col-span-2">
-                    <h1 className="text-xl text-center font-bold mb-4">ToDo リスト</h1>
-                    <Todo />
+                    {/* children をレンダリング */}
+                    {children} 
                 </div>
             </section>
 

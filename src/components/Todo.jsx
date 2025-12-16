@@ -16,7 +16,7 @@ const getInitialTodos = () => {
   }
 };
 
-export default function Todo() {
+export default function Todo({ user }) {
   const [todos, setTodos] = useState(getInitialTodos);
   // フォーム入力値のステート
   const [input, setInput] = useState("");
