@@ -170,49 +170,51 @@ export default function Todo() {
         </div>
       </div>
 
-      <div className="flex justify-start items-center  text-sm">
-            <label htmlFor="sort-select" className="font-semibold text-gray-700 w-20"> {/* ラベルに固定幅を設定 */}
-                並べ替え：
-            </label>
-            <select
-                id="sort-select"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="flex border rounded px-2 py-1 bg-white flex-1 min-w-0" // 幅を柔軟に使う
-            >
-                <option value="created_at">作成日（新しい→古い）</option>
-                <option value="dueDate">期日(早い→遅い)</option>
-                <option value="priority">優先度（高→低）</option>
-            </select>
-        </div>
+      <div className="mb-6 flex flex-col gap-3 border-t pt-4">
+        <div className="flex justify-start items-center  text-sm">
+              <label htmlFor="sort-select" className="font-semibold text-gray-700 w-20"> {/* ラベルに固定幅を設定 */}
+                  並べ替え：
+              </label>
+              <select
+                  id="sort-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="flex border rounded px-2 py-1 bg-white flex-1 min-w-0" // 幅を柔軟に使う
+              >
+                  <option value="created_at">作成日（新しい→古い）</option>
+                  <option value="dueDate">期日(早い→遅い)</option>
+                  <option value="priority">優先度（高→低）</option>
+              </select>
+          </div>
 
         {/* 4-2. フィルタボタン */}
-        <div className="flex justify-between items-center text-sm">
-            <span className="font-semibold text-gray-700 w-20">
-              絞り込み：
-            </span>
-            <div className="flex gap-1 p-1 px-2 py-1 border rounded-lg bg-gray-50 flex-1 justify-around"> {/* flex-1 で幅を広げ、justify-around でボタン間隔を調整 */}
-                {['all','active','completed'].map((filter) => (
-                    <button
-                        key={filter}
-                        onClick={() => setFilterStatus(filter)}
-                        className={`
-                            px-3 py-1 rounded-md transition-colors duration-200 text-xs font-medium
-                            ${filterStatus === filter
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-100'
-                            }
-                        `}
-                    >
-                        {filter === 'all' ? 'すべて' : filter === 'active' ? '未完了' : '完了済み'}
-                    </button>
-                ))}
-            </div>
+          <div className="flex justify-between items-center text-sm">
+              <span className="font-semibold text-gray-700 w-20">
+                絞り込み：
+              </span>
+              <div className="flex gap-1 p-1 px-2 py-1 border rounded-lg bg-gray-50 flex-1 justify-around"> {/* flex-1 で幅を広げ、justify-around でボタン間隔を調整 */}
+                  {['all','active','completed'].map((filter) => (
+                      <button
+                          key={filter}
+                          onClick={() => setFilterStatus(filter)}
+                          className={`
+                              px-3 py-1 rounded-md transition-colors duration-200 text-xs font-medium
+                              ${filterStatus === filter
+                                  ? 'bg-indigo-600 text-white shadow-md'
+                                  : 'text-gray-600 hover:bg-gray-100'
+                              }
+                          `}
+                      >
+                          {filter === 'all' ? 'すべて' : filter === 'active' ? '未完了' : '完了済み'}
+                      </button>
+                  ))}
+              </div>
         </div>
+    </div>
 
       {/* 3. ToDo リスト */}
-        <section>
-          <ul className="space-y-3 pt-7">
+        <section className="border-t">
+          <ul className="space-y-3 pt-6">
             <AnimatePresence>
               {sortedTodos.map((todo) => (
                 <TodoItem
