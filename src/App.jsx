@@ -49,7 +49,7 @@ function App() {
       <Header user={user} onLogout={handleLogout} />
 
       {/* Mainコンポーネントでコンテンツを表示 */}
-      <Main className="flex-grow">
+      <Main className="flex-grow" user={user}>
           {content}
       </Main>
 
