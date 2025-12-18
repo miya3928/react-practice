@@ -27,7 +27,7 @@ export default function Profile({ user }) {
         <h2 className="text-lg font-bold text-indigo-700">マイカード</h2>
         <button 
           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-          className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded border"
+          className="text-xs bg-gray-100 hover:bg-blue-200 px-2 py-1 rounded border"
         >
           {isEditing ? "保存" : "編集"}
         </button>
@@ -35,8 +35,8 @@ export default function Profile({ user }) {
 
       <div className="text-sm space-y-3">
         <div>
-          <label className="text-xs text-gray-400 block">名前</label>
-          <p className="font-bold text-gray-800">{user.name}</p>
+          <label className="text-xs text-gray-600 block">名前</label>
+          <p className="font-bold text-gray-800">{user.name}さん</p>
         </div>
 
         {isEditing ? (
@@ -44,7 +44,7 @@ export default function Profile({ user }) {
             <div>
               <label className="text-xs text-gray-400 block">自己紹介</label>
               <textarea
-                className="w-full border rounded p-1 text-sm"
+                className="w-full border rounded p-1 text-sm "
                 value={profileData.bio}
                 onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
               />
@@ -61,12 +61,12 @@ export default function Profile({ user }) {
         ) : (
           <>
             <div>
-              <label className="text-xs text-gray-400 block">自己紹介</label>
-              <p className="text-gray-700 whitespace-pre-wrap">{profileData.bio}</p>
+              <label className="text-xs text-gray-600 block">自己紹介</label>
+              <p className="text-gray-800 font-semibold whitespace-pre-wrap">{profileData.bio}</p>
             </div>
             <div>
-              <label className="text-xs text-gray-400 block">今後の目標</label>
-              <p className="text-gray-700">{profileData.goal}</p>
+              <label className="text-xs text-gray-600 block">今後の目標</label>
+              <p className="text-gray-800 font-semibold">{profileData.goal}</p>
             </div>
           </>
         )}

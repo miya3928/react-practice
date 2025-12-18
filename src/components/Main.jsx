@@ -9,7 +9,7 @@ export default function Main({ children, className, user }) {
             <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* 1. サイドバーエリア (md:col-span-1) */}
                 <aside className="md:col-span-1 bg-white p-4 shadow rounded-lg h-fit">
-                    <h3 className="text-xl font-medium mb-3">プロフィール</h3>
+                    <h3 className="text-xl text-center font-bold mb-3">プロフィール</h3>
                     <Profile user={user} />
                 </aside>
                 {/* 2. メインコンテンツエリア (ログイン or Todoリスト) */}
