@@ -17,6 +17,12 @@ const getPriorityStyles = (priority) => {
     }
 };
 
+const tagColors = {
+  '仕事': 'bg-blue-100 text-blue-700',
+  'プライベート': 'bg-green-100 text-green-700',
+  '学習': 'bg-purple-100 text-purple-700'
+};
+
 export default function TodoItem({
     todo,
     toggleDone,
@@ -32,6 +38,8 @@ export default function TodoItem({
     setEditingPriority,
     editingDueDate,
     setEditingDueDate,
+    editingTag,
+    setEditingTag,
 }) {
     // 優先度に応じたスタイル
     const priorityClasses = getPriorityStyles(todo.priority);
@@ -80,6 +88,11 @@ export default function TodoItem({
                             <option value="medium">📝 中</option>
                             <option value="low">🌱 低</option>
                         </select>
+                        <select className="border p-1 rounded text-xs" value={editingTag} onChange={(e) => setEditingTag(e.target.value)}>
+                      <option value="仕事">💼 仕事</option>
+                      <option value="プライベート">🏠 プライベート</option>
+                      <option value="学習">📚 学習</option>
+                    </select>
                         <input
                             type="date"
                             value={editingDueDate}
@@ -116,6 +129,11 @@ export default function TodoItem({
                         {/* 優先順位 */}
                         <span className={`px-2 py-0.5 rounded-full ${priorityClasses}`}>
                             {todo.priority === 'high' ? '高' : todo.priority === 'medium' ? '中' : '低'}
+                        </span>
+
+                        {/* 🌟 タグ表示 */}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${tagColors[todo.tag] || 'bg-gray-100'}`}>
+                          {todo.tag}
                         </span>
 
                         {/* 期日 */}

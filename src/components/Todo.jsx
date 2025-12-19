@@ -22,12 +22,14 @@ export default function Todo({ user }) {
   const [input, setInput] = useState("");
   const [priorityInput, setPriorityInput] = useState("medium");
   const [dueDateInput, setDueDateInput] = useState("");
+  const [tagInput, setTagInput] = useState("プライベート");
 
   // 編集モード関連のステート
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const [editingPriority, setEditingPriority] = useState("");
   const [editingDueDate, setEditingDueDate] = useState("");
+  const [editingTag, setEditingTag] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   // 🌟 データの永続化: todosが変更されるたびにlocalStorageに保存
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function Todo({ user }) {
   }, [todos]);
 
     // --- CRUD 操作 ---
-
+    // 新記追加
     const addTodo = () => {
       if (input.trim() === "") return;
       const newTodo = {
@@ -45,12 +47,14 @@ export default function Todo({ user }) {
         created_at: new Date().toISOString(),
         priority: priorityInput,
         dueDate: dueDateInput || null,
+        tag:  tagInput,
       };
       setTodos(prevTodos => [...prevTodos, newTodo]);
       // フォームのリセット
       setInput("");
       setPriorityInput("medium");
       setDueDateInput("");
+      setTagInput("プライベート");
     };
 
     const toggleDone = (id) => {
@@ -60,16 +64,17 @@ export default function Todo({ user }) {
         )
       );
     };
-
+    // 削除
     const deleteTodo = (id) => {
       setTodos(prevTodos => prevTodos.filter((todo) => todo.id !== id));
     };
-
+    // 編集
     const startEdit = (todo) => {
       setEditingId(todo.id);
       setEditingText(todo.text);
       setEditingPriority(todo.priority); // 既存の優先度を設定
-      setEditingDueDate(todo.dueDate || ""); // 既存の期日を設定
+      setEditingDueDate(todo.dueDate || "");
+      setEditingTag(todo.tag); // 既存の期日を設定
     };
     const saveEdit = (id) => {
       setTodos(prevTodos =>
@@ -80,10 +85,12 @@ export default function Todo({ user }) {
                 text: editingText.trim(),
                 priority: editingPriority,
                 dueDate: editingDueDate || null,
+                tag: editingTag,
               }
             : todo
         )
       );
+    // 編集キャンセル
       cancelEdit();
     };
     const cancelEdit = () => {
@@ -91,9 +98,10 @@ export default function Todo({ user }) {
       setEditingText("");
       setEditingPriority("");
       setEditingDueDate("");
+      setEditingTag("");
     };
 
-    // --- 絞り込むロジック (sortedTodosの前に実行) ---
+    // --- 絞り込み(sortedTodosの前に実行) ---
     const filteredTodos = todos.filter(todo => {
       if (filterStatus === "active") {
         return !todo.done;
@@ -104,7 +112,7 @@ export default function Todo({ user }) {
       return true;
     });
 
-  //  新規追加: ソート基準を保持
+  // ソート 追加順
   const [sortBy, setSortBy] = useState("created_at");
   // ソートロジックの定義
   const sortedTodos = [...filteredTodos];
@@ -161,12 +169,13 @@ export default function Todo({ user }) {
                 <option value="medium">📝 中</option>
                 <option value="low">🌱 低</option>
             </select>
-            <input
-                type="date"
-                value={dueDateInput}
-                onChange={(e) => setDueDateInput(e.target.value)}
-                className="border rounded px-2 py-1 flex-1"
-            />
+            {/* 🌟 タグ選択の追加 */}
+            <select value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="border rounded px-2 py-1 flex-1">
+                <option value="仕事">💼 仕事</option>
+                <option value="プライベート">🏠 プライベート</option>
+                <option value="学習">📚 学習</option>
+            </select>
+            <input type="date" value={dueDateInput} onChange={(e) => setDueDateInput(e.target.value)} className="border rounded px-2 py-1 flex-1" />
         </div>
       </div>
 
@@ -233,6 +242,8 @@ export default function Todo({ user }) {
                   editingPriority={editingPriority}
                   setEditingPriority={setEditingPriority}
                   editingDueDate={editingDueDate}
+                  editingTag={editingTag} // 🌟 追加
+                  setEditingTag={setEditingTag} // 🌟 追加
                   setEditingDueDate={setEditingDueDate}
                 />
               ))}
