@@ -1,16 +1,10 @@
-// Todo.jsx
 import { useState, useEffect } from "react";
 import TodoItem from "./TodoItem.jsx";
 import { AnimatePresence } from 'framer-motion';
 
 const getInitialTodos = () => {
   const data = localStorage.getItem("todos");
-  try {
-    return data ? JSON.parse(data) : [];
-  } catch (e) {
-    console.error("Failed to parse localStorage data:", e);
-    return [];
-  }
+  try { return data ? JSON.parse(data) : []; } catch (e) { return []; }
 };
 
 export default function Todo({ user }) {
@@ -18,27 +12,45 @@ export default function Todo({ user }) {
   const [input, setInput] = useState("");
   const [priorityInput, setPriorityInput] = useState("medium");
   const [dueDateInput, setDueDateInput] = useState("");
-  const [tagInput, setTagInput] = useState("プライベート"); // 🌟 タグ用ステート追加
+  const [tagInput, setTagInput] = useState("プライベート");
 
-  // 進捗率の計算
-  const totalTodos = todos.length;
-  const completedTodos = todos.filter(t => t.done).length;
-  const progress = totalTodos === 0 ? 0 : Math.round((completedTodos / totalTodos) * 100);
-
-  // 編集モード関連
-  const [editingId, setEditingId] = useState(null);
-  const [editingText, setEditingText] = useState("");
-  const [editingPriority, setEditingPriority] = useState("");
-  const [editingDueDate, setEditingDueDate] = useState("");
-  const [editingTag, setEditingTag] = useState(""); // 🌟 編集用タグ
+  // 🌟 フィルタ用ステート
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [filterTag, setFilterTag] = useState("all");
+  const [sortBy, setSortBy] = useState("created_at");
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
 
+  // --- 絞り込みロジック (複数条件) ---
+  const displayedTodos = todos.filter(todo => {
+    const matchStatus = filterStatus === "all" ? true : filterStatus === "completed" ? todo.done : !todo.done;
+    const matchPriority = filterPriority === "all" ? true : todo.priority === filterPriority;
+    const matchTag = filterTag === "all" ? true : todo.tag === filterTag;
+    return matchStatus && matchPriority && matchTag;
+  });
+
+  // --- 並べ替えロジック ---
+  const sortedTodos = [...displayedTodos].sort((a, b) => {
+    if (sortBy === "priority") {
+      const order = { high: 3, medium: 2, low: 1 };
+      return order[b.priority] - order[a.priority];
+    }
+    if (sortBy === "dueDate") {
+      return new Date(a.dueDate || '9999-12-31') - new Date(b.dueDate || '9999-12-31');
+    }
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+  // 完了したものを下に（常に適用）
+  sortedTodos.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+
+  // 進捗計算
+  const progress = todos.length === 0 ? 0 : Math.round((todos.filter(t => t.done).length / todos.length) * 100);
+
   const addTodo = () => {
-    if (input.trim() === "") return;
+    if (!input.trim()) return;
     const newTodo = {
       id: crypto.randomUUID(),
       text: input.trim(),
@@ -46,184 +58,110 @@ export default function Todo({ user }) {
       created_at: new Date().toISOString(),
       priority: priorityInput,
       dueDate: dueDateInput || null,
-      tag: tagInput, // 🌟 タグを追加
+      tag: tagInput,
     };
-    setTodos(prevTodos => [...prevTodos, newTodo]);
+    setTodos([newTodo, ...todos]);
     setInput("");
-    setPriorityInput("medium");
-    setDueDateInput("");
-    setTagInput("プライベート");
   };
-
-  const toggleDone = (id) => {
-    setTodos(prevTodos => prevTodos.map((todo) => todo.id === id ? { ...todo, done: !todo.done } : todo));
-  };
-
-  const deleteTodo = (id) => {
-    setTodos(prevTodos => prevTodos.filter((todo) => todo.id !== id));
-  };
-
-  // 🌟 完了済みを一括削除
-  const clearCompleted = () => {
-    if (window.confirm("完了済みのタスクをすべて削除しますか？")) {
-      setTodos(prevTodos => prevTodos.filter(todo => !todo.done));
-    }
-  };
-
-  const startEdit = (todo) => {
-    setEditingId(todo.id);
-    setEditingText(todo.text);
-    setEditingPriority(todo.priority);
-    setEditingDueDate(todo.dueDate || "");
-    setEditingTag(todo.tag || "プライベート"); // 🌟 既存タグ設定
-  };
-
-  const saveEdit = (id) => {
-    setTodos(prevTodos =>
-      prevTodos.map((todo) =>
-        todo.id === id
-          ? { ...todo, text: editingText.trim(), priority: editingPriority, dueDate: editingDueDate || null, tag: editingTag }
-          : todo
-      )
-    );
-    cancelEdit();
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditingText("");
-    setEditingPriority("");
-    setEditingDueDate("");
-    setEditingTag("");
-  };
-
-  // 絞り込みとソート (既存ロジック継続)
-  const filteredTodos = todos.filter(todo => {
-    if (filterStatus === "active") return !todo.done;
-    if (filterStatus === "completed") return todo.done;
-    return true;
-  });
-
-  const [sortBy, setSortBy] = useState("created_at");
-  const sortedTodos = [...filteredTodos];
-  
-  if(sortBy === "priority"){
-    const priorityOrder ={ high: 3, medium: 2, low: 1 };
-    sortedTodos.sort((a,b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
-  } else if (sortBy === "dueDate"){
-    sortedTodos.sort((a,b) => {
-      const dateA = a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31');
-      const dateB = b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
-      return dateA - dateB;
-    });
-  } else {
-    sortedTodos.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-  }
-  sortedTodos.sort((a,b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg border">
-      
-      {/* 🌟 1. 進捗表示エリア */}
-      <div className="mb-6">
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-bold text-gray-700">全体の進捗</span>
-          <span className="text-indigo-600 font-bold">{progress}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 mb-6">
-        <div className="flex gap-2">
-            <input
-              className="flex-1 border rounded px-3 py-2 focus:ring focus:ring-blue-300"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="ToDo を入力"
-            />
-            <button
-              onClick={addTodo}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-              disabled={input.trim() === ""}
-            >
-              追加
-            </button>
-        </div>
-
-        <div className="flex gap-2 text-sm">
-            <select value={priorityInput} onChange={(e) => setPriorityInput(e.target.value)} className="border rounded px-2 py-1 flex-1">
-                <option value="high">🔥 高</option>
-                <option value="medium">📝 中</option>
-                <option value="low">🌱 低</option>
-            </select>
-            {/* 🌟 タグ選択の追加 */}
-            <select value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="border rounded px-2 py-1 flex-1">
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* 🌟 入力エリア: カード形式でラベルを追加 */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100">
+        <h3 className="text-sm font-bold text-indigo-900 mb-4 flex items-center gap-2">
+          <span className="bg-indigo-600 text-white w-5 h-5 flex items-center justify-center rounded-full text-[10px]">＋</span>
+          新規タスクを追加
+        </h3>
+        <div className="space-y-4">
+          <input
+            className="w-full text-lg border-b-2 border-gray-100 focus:border-indigo-500 outline-none py-2 transition-colors"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="何をしますか？"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">優先度</label>
+              <select value={priorityInput} onChange={(e) => setPriorityInput(e.target.value)} className="w-full border rounded-lg p-2 text-sm bg-gray-50">
+                <option value="high">🔴 高</option>
+                <option value="medium">🟡 中</option>
+                <option value="low">🔵 低</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">タグ</label>
+              <select value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="w-full border rounded-lg p-2 text-sm bg-gray-50">
                 <option value="仕事">💼 仕事</option>
                 <option value="プライベート">🏠 プライベート</option>
                 <option value="学習">📚 学習</option>
-            </select>
-            <input type="date" value={dueDateInput} onChange={(e) => setDueDateInput(e.target.value)} className="border rounded px-2 py-1 flex-1" />
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">期日</label>
+              <input type="date" value={dueDateInput} onChange={(e) => setDueDateInput(e.target.value)} className="w-full border rounded-lg p-2 text-sm bg-gray-50" />
+            </div>
+          </div>
+          <button onClick={addTodo} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]">
+            タスクを登録する
+          </button>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-col gap-3 border-t pt-4">
-          {/* ソートと表示切替は既存通り */}
-          <div className="flex justify-start items-center text-sm">
-              <label className="font-semibold text-gray-700 w-20">並べ替え：</label>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="flex border rounded px-2 py-1 bg-white flex-1 min-w-0">
-                  <option value="created_at">作成日</option>
-                  <option value="dueDate">期日</option>
-                  <option value="priority">優先度</option>
-              </select>
-          </div>
-
-          <div className="flex justify-between items-center text-sm">
-              <span className="font-semibold text-gray-700 w-20">絞り込み：</span>
-              <div className="flex gap-1 p-1 border rounded-lg bg-gray-50 flex-1 justify-around">
-                  {['all','active','completed'].map((f) => (
-                      <button key={f} onClick={() => setFilterStatus(f)} className={`px-3 py-1 rounded-md text-xs ${filterStatus === f ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}>
-                          {f === 'all' ? 'すべて' : f === 'active' ? '未完了' : '完了済み'}
-                      </button>
-                  ))}
-              </div>
-          </div>
-
-          {/* 🌟 完了済み削除ボタン */}
-          {completedTodos > 0 && (
-            <button onClick={clearCompleted} className="text-xs text-red-500 hover:text-red-700 text-right mt-1 underline">
-              完了済みをすべて削除
-            </button>
-          )}
+      {/* 進捗バー */}
+      <div className="px-2">
+        <div className="flex justify-between text-xs font-bold mb-2 text-gray-500">
+          <span>進捗状況</span>
+          <span>{progress}%</span>
+        </div>
+        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700" style={{ width: `${progress}%` }} />
+        </div>
       </div>
 
-      <section className="border-t">
-          <ul className="space-y-3 pt-6">
-            <AnimatePresence>
-              {sortedTodos.map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  toggleDone={toggleDone}
-                  deleteTodo={deleteTodo}
-                  startEdit={startEdit}
-                  saveEdit={saveEdit}
-                  cancelEdit={cancelEdit}
-                  editingId={editingId}
-                  editingText={editingText}
-                  setEditingText={setEditingText}
-                  editingPriority={editingPriority}
-                  setEditingPriority={setEditingPriority}
-                  editingDueDate={editingDueDate}
-                  setEditingDueDate={setEditingDueDate}
-                  editingTag={editingTag}
-                  setEditingTag={setEditingTag}
-                />
-              ))}
-            </AnimatePresence>
-          </ul>
-      </section>
+      {/* 🌟 フィルタ・ソートエリア */}
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-3">
+        <div className="flex flex-wrap gap-4 items-center text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 font-bold">並べ替え:</span>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent font-bold text-indigo-600 outline-none">
+              <option value="created_at">作成順</option>
+              <option value="dueDate">期日が近い順</option>
+              <option value="priority">優先度順</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 font-bold">タグ:</span>
+            <select value={filterTag} onChange={(e) => setFilterTag(e.target.value)} className="bg-transparent font-bold text-indigo-600 outline-none">
+              <option value="all">すべて</option>
+              <option value="仕事">仕事</option>
+              <option value="プライベート">プライベート</option>
+              <option value="学習">学習</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {['all', 'active', 'completed'].map((s) => (
+            <button key={s} onClick={() => setFilterStatus(s)} className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filterStatus === s ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-50 text-gray-400'}`}>
+              {s === 'all' ? '全部' : s === 'active' ? '未完了' : '完了'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Todoリスト */}
+      <ul className="space-y-3">
+        <AnimatePresence>
+          {sortedTodos.map((todo) => (
+            <TodoItem 
+              key={todo.id} 
+              todo={todo} 
+              toggleDone={(id) => setTodos(todos.map(t => t.id === id ? {...t, done: !t.done} : t))}
+              deleteTodo={(id) => setTodos(todos.filter(t => t.id !== id))}
+              updateTodo={(id, newData) => setTodos(todos.map(t => t.id === id ? {...t, ...newData} : t))}
+            />
+          ))}
+        </AnimatePresence>
+      </ul>
     </div>
   );
 }

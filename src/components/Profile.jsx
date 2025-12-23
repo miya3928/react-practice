@@ -27,7 +27,7 @@ export default function Profile({ user }) {
         <h2 className="text-lg font-bold text-indigo-700">マイカード</h2>
         <button 
           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-          className="text-xs bg-gray-100 hover:bg-blue-200 px-2 py-1 rounded border"
+          className="text-xs bg-gray-100 hover:bg-blue-200 px-3 py-2 rounded border"
         >
           {isEditing ? "保存" : "編集"}
         </button>

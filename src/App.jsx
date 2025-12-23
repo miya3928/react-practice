@@ -1,57 +1,52 @@
-import { useState, useEffect } from 'react'; // useEffect を追加
+import { useState, useEffect } from 'react';
 import './index.css';
 import Header from "./components/Header.jsx";
 import Main from "./components/Main.jsx";
 import Footer from "./components/Footer.jsx";
-// 🌟 新規インポート
 import Login from "./components/Login.jsx";
 import Todo from "./components/Todo.jsx";
+import Profile from "./components/Profile.jsx"; // インポート
 
-
-// 💡 認証状態を localStorage から読み込むヘルパー関数
 const getInitialUser = () => {
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 };
 
-
 function App() {
-  // 🌟 1. ユーザー認証ステートの定義 (初期値は localStorage から)
   const [user, setUser] = useState(getInitialUser);
+  const [isProfileOpen, setIsProfileOpen] = useState(false); // 🌟 プロフィール表示フラグ
 
-  // 🌟 2. ユーザー状態の永続化
   useEffect(() => {
     localStorage.setItem("user", JSON.stringify(user));
   }, [user]);
 
-  // ログイン処理
-  const handleLogin = (userInfo) => {
-    setUser(userInfo); // userInfo には { name: '...' } が入る
-  };
-
-  // ログアウト処理
+  const handleLogin = (userInfo) => setUser(userInfo);
   const handleLogout = () => {
     setUser(null);
+    setIsProfileOpen(false);
   };
 
-  // 3. 表示するメインコンテンツを決定
-  const content = user ? (
-    // ログイン済みの場合、Todoリストを表示
-    <Todo user={user} />
-  ) : (
-    // 未ログインの場合、ログインフォームを表示
-    <Login onLogin={handleLogin} />
-  );
-
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* user情報をHeaderに渡し、ログアウトボタンを表示可能にする */}
-      <Header user={user} onLogout={handleLogout} />
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* 🌟 ユーザー名クリックでプロフィールを開くように関数を渡す */}
+      <Header user={user} onLogout={handleLogout} onOpenProfile={() => setIsProfileOpen(true)} />
 
-      {/* Mainコンポーネントでコンテンツを表示 */}
-      <Main className="flex-grow" user={user}>
-          {content}
+      <Main className="flex-grow">
+        {user ? <Todo user={user} /> : <Login onLogin={handleLogin} />}
       </Main>
+
+      {/* 🌟 プロフィールをモーダルとして表示 */}
+      {isProfileOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full relative shadow-2xl">
+            <button 
+              onClick={() => setIsProfileOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
+            >✕</button>
+            <Profile user={user} />
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
