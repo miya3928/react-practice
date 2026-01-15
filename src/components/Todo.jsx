@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import TodoItem from "./TodoItem.jsx";
 import { AnimatePresence, motion } from 'framer-motion';
 import Calendar from 'react-calendar'; // 🌟 追加
-// import 'react-calendar/dist/Calendar.css'; // 🌟 スタイルを追加
-// import './calendar-custom.css'; // 🌟 後ほど作るカスタムCSS
+import 'react-calendar/dist/Calendar.css'; // 🌟 スタイルを追加
+import '../calendar-custom.css'; // 🌟 後ほど作るカスタムCSS
 import { supabase } from "../supabase"; // 🌟 Supabaseをインポート
 
 export default function Todo({ user }) {
@@ -233,6 +233,7 @@ export default function Todo({ user }) {
              onChange={setSelectedDate} 
              value={selectedDate} 
              locale="ja-JP"
+             formatDay={(locale, date) => date.getDate()} //  「日」を消して数字だけにする
              className="border-none w-full"
            />
         </div>
