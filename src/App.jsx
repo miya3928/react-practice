@@ -36,11 +36,15 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* ログインユーザーがいれば情報を渡す、いなければ null */}
-      <Header 
-        user={session?.user || null} 
-        onLogout={handleLogout} 
-        onOpenProfile={() => setIsProfileOpen(true)} 
-      />
+      {/* App.jsx の Header への渡し方 */}
+    <Header
+      user={session?.user ? {
+        ...session.user,
+        display_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0]
+      } : null}
+      onLogout={handleLogout}
+      onOpenProfile={() => setIsProfileOpen(true)}
+    />
 
       <Main className="flex-grow">
         {session ? (
