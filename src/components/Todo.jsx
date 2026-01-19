@@ -93,41 +93,41 @@ export default function Todo({ user }) {
 
   const progress = todos.length === 0 ? 0 : Math.round((todos.filter(t => t.done).length / todos.length) * 100);
 
-  const renderTileContent = ({ date, view }) => {
-    // 月表示の時だけドットを出す
-    if (view !== 'month') return null;
-  
-    // その日のタスク（未完了のみ）があるかチェック
-    const dateStr = date.toLocaleDateString('sv-SE');
-    const hasTasks = todos.some(t => t.due_date === dateStr && !t.done);
-  
-    return hasTasks ? (
-      <div className="flex justify-center mt-1">
-        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
-      </div>
-    ) : (
-      <div className="h-1.5 mt-1"></div> // レイアウト維持のための空スペース
-    );
-  };
+   // 月表示の時だけドットを出す
+// Todo.jsx 内の renderTileContent を修正
+const renderTileContent = ({ date, view }) => {
+  if (view !== 'month') return null;
+
+  const dateStr = date.toLocaleDateString('sv-SE');
+  // その日の未完了タスクをカウント
+  const dailyTasks = todos.filter(t => t.due_date === dateStr && !t.done);
+  const count = dailyTasks.length;
+
+  if (count === 0) return <div className="h-1.5 mt-1"></div>;
+
+  // 数に応じて色を決定
+  let dotColor = "bg-indigo-400"; // 1-2個：通常（青）
+  if (count >= 5) {
+    dotColor = "bg-red-500";     // 5個以上：大変（赤）
+  } else if (count >= 3) {
+    dotColor = "bg-orange-400";  // 3-4個：忙しい（オレンジ）
+  }
+
+  return (
+    <div className="flex flex-col items-center mt-1">
+      <div className={`w-1.5 h-1.5 ${dotColor} rounded-full`}></div>
+      {/* オプション：5個以上の時だけ小さな数字を出してもOK */}
+      {count >= 5 && <span className="text-[10px] text-red-500 font-black leading-none mt-0.5">{count}</span>}
+    </div>
+  );
+};
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 p-2">
       <div className="flex-grow space-y-6 lg:w-2/3">
         {/* クイック入力 */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <div className="flex flex-col md:flex-row gap-3">
-            <input
-              className="flex-grow text-lg font-bold outline-none border-b-2 border-transparent focus:border-indigo-500 transition-all py-2"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="新しいタスクを入力..."
-              onKeyDown={(e) => e.key === 'Enter' && addTodo()}
-            />
-            <button onClick={addTodo} className="bg-indigo-600 text-white px-8 py-2 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:scale-105 transition-all">
-              追加
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-4 pt-4">
+        <div className="flex flex-wrap gap-4 pb-4">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-gray-400 mb-1 uppercase">優先度</span>
               <select value={priorityInput} onChange={(e) => setPriorityInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none">
@@ -149,6 +149,20 @@ export default function Todo({ user }) {
               <input type="date" value={dueDateInput} onChange={(e) => setDueDateInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none" />
             </div>
           </div>
+
+          <div className="flex flex-col md:flex-row gap-3">
+            <input
+              className="flex-grow text-lg font-bold outline-none border-b-2 border-transparent focus:border-indigo-500 transition-all py-3"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="新しいタスクを入力..."
+              onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+            />
+            <button onClick={addTodo} className="bg-indigo-600 text-white px-8 py-2 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:scale-105 transition-all">
+              追加
+            </button>
+          </div>
+
         </div>
 
         {/* フィルタ & タスクリスト */}

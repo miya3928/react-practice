@@ -20,12 +20,16 @@ export default function TodoItem({ todo, toggleDone, deleteTodo, updateTodo }) {
   };
 
   // 日付表示の整形：今日の日付なら「今日」と表示する機能
-  const getRelativeDate = (dateStr) => {
-    if (!dateStr) return null;
+// TodoItem.jsx 内の getRelativeDate 周辺を修正
+const getRelativeStatus = (dateStr, isDone) => {
+  if (!dateStr || isDone) return { text: dateStr, isOverdue: false };
+
     const today = new Date().toLocaleDateString('sv-SE');
-    if (dateStr === today) return "今日";
-    return dateStr;
-  };
+  if (dateStr === today) return { text: "今日", isOverdue: false };
+  if (dateStr < today) return { text: `期限切れ (${dateStr})`, isOverdue: true };
+
+    return { text: dateStr, isOverdue: false };
+};
 
   // デザイン設定：優先度に応じたアイコン
   const priorityDots = { high: '🔴', medium: '🟡', low: '🔵' };
@@ -96,11 +100,15 @@ export default function TodoItem({ todo, toggleDone, deleteTodo, updateTodo }) {
                 {todo.tag}
               </span>
 
-              {/* 期限表示機能：データベースのdue_dateを表示 */}
-              {todo.due_date && (
-                <span className="text-[10px] text-gray-400 font-bold">
-                  📅 {getRelativeDate(todo.due_date)}
-                </span>
+            {/* 期限表示機能：データベースのdue_dateを表示 */}
+            {todo.due_date && (
+              <span className={`text-[10px] font-bold ${
+                getRelativeStatus(todo.due_date, todo.done).isOverdue 
+                  ? 'text-red-500 bg-red-50 px-2 py-0.5 rounded-md animate-pulse' // 期限切れは赤く、少し動かす
+                  : 'text-gray-400'
+              }`}>
+                📅 {getRelativeStatus(todo.due_date, todo.done).text}
+              </span>
               )}
             </div>
           </div>
