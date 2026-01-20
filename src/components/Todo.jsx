@@ -3,6 +3,7 @@ import TodoItem from "./TodoItem.jsx";
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from "../supabase";
 import Calendar from 'react-calendar';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import 'react-calendar/dist/Calendar.css';
 import '../calendar-custom.css';
 
@@ -12,15 +13,13 @@ export default function Todo({ user }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isFilterByDate, setIsFilterByDate] = useState(false);
 
-  // 入力用ステート
   const [input, setInput] = useState("");
   const [priorityInput, setPriorityInput] = useState("medium");
   const [dueDateInput, setDueDateInput] = useState(new Date().toISOString().split('T')[0]);
   const [tagInput, setTagInput] = useState("プライベート");
 
-  // フィルタ・ソート用ステート
   const [filterStatus, setFilterStatus] = useState("all");
-  const [sortBy, setSortBy] = useState("created_at"); // ソート用追加
+  const [sortBy, setSortBy] = useState("created_at");
 
   useEffect(() => { fetchTodos(); }, [user]);
 
@@ -31,7 +30,6 @@ export default function Todo({ user }) {
     setLoading(false);
   };
 
-  // タスク追加
   const addTodo = async () => {
     if (!input.trim()) return;
     const { data, error } = await supabase.from('todos').insert([{
@@ -48,7 +46,6 @@ export default function Todo({ user }) {
     }
   };
 
-  // 🌟  (toggle / delete / update)
   const toggleDone = async (todo) => {
     const { error } = await supabase.from('todos').update({ done: !todo.done }).eq('id', todo.id);
     if (!error) setTodos(todos.map(t => t.id === todo.id ? { ...t, done: !t.done } : t));
@@ -70,7 +67,34 @@ export default function Todo({ user }) {
     if (!error) setTodos(todos.map(t => t.id === id ? { ...t, ...newData } : t));
   };
 
-  // --- フィルタロジック ---
+  // 円グラフ用データの計算
+  const chartData = [
+    { name: '仕事', value: todos.filter(t => t.tag === '仕事').length, color: '#4f46e5' },
+    { name: '学習', value: todos.filter(t => t.tag === '学習').length, color: '#a855f7' },
+    { name: 'プライベート', value: todos.filter(t => t.tag === 'プライベート').length, color: '#22c55e' },
+  ].filter(d => d.value > 0);
+
+  // カレンダーのバッジ/ドット描画
+  const renderTileContent = ({ date, view }) => {
+    if (view !== 'month') return null;
+    const dateStr = date.toLocaleDateString('sv-SE');
+    const dailyTasks = todos.filter(t => t.due_date === dateStr && !t.done);
+    const count = dailyTasks.length;
+
+    if (count === 0) return null;
+
+    if (count >= 5) {
+      return <div className="task-badge">{count}</div>;
+    }
+
+    const dotColor = count >= 3 ? "bg-orange-400" : "bg-indigo-400";
+    return (
+      <div className="task-dot-container">
+        <div className={`task-dot ${dotColor}`} />
+      </div>
+    );
+  };
+
   const displayedTodos = todos.filter(todo => {
     const matchStatus = filterStatus === "all" ? true : filterStatus === "completed" ? todo.done : !todo.done;
     if (isFilterByDate) {
@@ -80,7 +104,6 @@ export default function Todo({ user }) {
     return matchStatus;
   });
 
-
   const sortedTodos = [...displayedTodos].sort((a, b) => {
     if (sortBy === "priority") {
       const order = { high: 3, medium: 2, low: 1 };
@@ -88,49 +111,19 @@ export default function Todo({ user }) {
     }
     return new Date(b.created_at) - new Date(a.created_at);
   });
-  // 完了したものを下に送る
   sortedTodos.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
 
   const progress = todos.length === 0 ? 0 : Math.round((todos.filter(t => t.done).length / todos.length) * 100);
 
-   // 月表示の時だけドットを出す
-// Todo.jsx 内の renderTileContent を修正
-const renderTileContent = ({ date, view }) => {
-  if (view !== 'month') return null;
-
-  const dateStr = date.toLocaleDateString('sv-SE');
-  // その日の未完了タスクをカウント
-  const dailyTasks = todos.filter(t => t.due_date === dateStr && !t.done);
-  const count = dailyTasks.length;
-
-  if (count === 0) return <div className="h-1.5 mt-1"></div>;
-
-  // 数に応じて色を決定
-  let dotColor = "bg-indigo-400"; // 1-2個：通常（青）
-  if (count >= 5) {
-    dotColor = "bg-red-500";     // 5個以上：大変（赤）
-  } else if (count >= 3) {
-    dotColor = "bg-orange-400";  // 3-4個：忙しい（オレンジ）
-  }
-
-  return (
-    <div className="flex flex-col items-center mt-1">
-      <div className={`w-1.5 h-1.5 ${dotColor} rounded-full`}></div>
-      {/* オプション：5個以上の時だけ小さな数字を出してもOK */}
-      {count >= 5 && <span className="text-[10px] text-red-500 font-black leading-none mt-0.5">{count}</span>}
-    </div>
-  );
-};
-
   return (
     <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 p-2">
       <div className="flex-grow space-y-6 lg:w-2/3">
-        {/* クイック入力 */}
+        {/* クイック入力フォーム（順序変更・調整済み） */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex flex-wrap gap-4 pb-4">
+          <div className="flex flex-wrap gap-4 pb-4 border-b border-gray-50 mb-2">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-gray-400 mb-1 uppercase">優先度</span>
-              <select value={priorityInput} onChange={(e) => setPriorityInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none">
+              <select value={priorityInput} onChange={(e) => setPriorityInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none cursor-pointer hover:bg-gray-100 transition-colors">
                 <option value="high">🔴 高</option>
                 <option value="medium">🟡 中</option>
                 <option value="low">🔵 低</option>
@@ -138,7 +131,7 @@ const renderTileContent = ({ date, view }) => {
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-gray-400 mb-1 uppercase">ジャンル</span>
-              <select value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none">
+              <select value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none cursor-pointer hover:bg-gray-100 transition-colors">
                 <option value="仕事">💼 仕事</option>
                 <option value="学習">📚 学習</option>
                 <option value="プライベート">🏠 プライベート</option>
@@ -146,26 +139,25 @@ const renderTileContent = ({ date, view }) => {
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-gray-400 mb-1 uppercase">期限</span>
-              <input type="date" value={dueDateInput} onChange={(e) => setDueDateInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none" />
+              <input type="date" value={dueDateInput} onChange={(e) => setDueDateInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none hover:bg-gray-100 transition-colors" />
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex flex-col md:flex-row gap-3 pt-2">
             <input
               className="flex-grow text-lg font-bold outline-none border-b-2 border-transparent focus:border-indigo-500 transition-all py-3"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="新しいタスクを入力..."
+              placeholder="何を実行しますか？"
               onKeyDown={(e) => e.key === 'Enter' && addTodo()}
             />
-            <button onClick={addTodo} className="bg-indigo-600 text-white px-8 py-2 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:scale-105 transition-all">
+            <button onClick={addTodo} className="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95 transition-all">
               追加
             </button>
           </div>
-
         </div>
 
-        {/* フィルタ & タスクリスト */}
+        {/* タスクリスト */}
         <div className="space-y-4">
            <div className="flex justify-between items-center px-2">
               <div className="flex gap-4">
@@ -188,13 +180,7 @@ const renderTileContent = ({ date, view }) => {
             ) : (
               <AnimatePresence mode="popLayout">
                 {sortedTodos.map((todo) => (
-                  <TodoItem 
-                    key={todo.id} 
-                    todo={todo} 
-                    toggleDone={() => toggleDone(todo)}
-                    deleteTodo={() => deleteTodo(todo.id)}
-                    updateTodo={updateTodo}
-                  />
+                  <TodoItem key={todo.id} todo={todo} toggleDone={() => toggleDone(todo)} deleteTodo={() => deleteTodo(todo.id)} updateTodo={updateTodo} />
                 ))}
               </AnimatePresence>
             )}
@@ -202,8 +188,9 @@ const renderTileContent = ({ date, view }) => {
         </div>
       </div>
 
-      {/* 右側：サイドバー */}
+      {/* 右側サイドバー：分析・統計 */}
       <div className="w-full lg:w-80 space-y-6">
+        {/* 進捗カード */}
         <div className="bg-indigo-600 p-6 rounded-3xl text-white shadow-lg shadow-indigo-200">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-black text-sm uppercase tracking-widest">Progress</h3>
@@ -214,40 +201,44 @@ const renderTileContent = ({ date, view }) => {
           </div>
         </div>
 
+        {/* カレンダーカード */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
            <h3 className="text-xs font-black text-gray-400 mb-4 uppercase tracking-widest">Calendar</h3>
            <Calendar 
-             onChange={(date) => {
-               setSelectedDate(date);
-               setIsFilterByDate(true); // 🌟 日付フィルタを有効化
-             }} 
+             onChange={(date) => { setSelectedDate(date); setIsFilterByDate(true); }} 
              value={selectedDate} 
              locale="ja-JP"
              formatDay={(locale, date) => date.getDate()} 
-             tileContent={renderTileContent}// 🌟 ドット表示を有効化
+             tileContent={renderTileContent}
              className="border-none w-full"
            />
         </div>
 
-        {/* 統計エリア */}
+        {/* 円グラフ：ジャンル分析 */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 className="text-xs font-black text-gray-400 mb-4 uppercase tracking-widest">Genre Stats</h3>
-          <div className="space-y-4">
-              {[
-                { label: '仕事', key: '仕事', color: 'bg-indigo-500' },
-                { label: '学習', key: '学習', color: 'bg-purple-500' },
-                { label: 'プライベート', key: 'プライベート', color: 'bg-green-500' },
-              ].map(item => (
-                <div key={item.key}>
-                  <div className="flex justify-between text-[10px] font-black mb-1 text-gray-500">
-                    <span>{item.label}</span>
-                    <span>{todos.filter(t => t.tag === item.key).length}</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full ${item.color}`} style={{ width: `${(todos.filter(t => t.tag === item.key).length / (todos.length || 1)) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
+          <h3 className="text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">Genre Analysis</h3>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
