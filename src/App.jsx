@@ -8,6 +8,7 @@ import Footer from "./components/Footer.jsx";
 import Auth from "./components/Auth.jsx"; // 新しいAuthコンポーネント
 import Todo from "./components/Todo.jsx";
 import Profile from "./components/Profile.jsx";
+import BottomNav from "./components/BottomNav.jsx";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -33,6 +34,7 @@ function App() {
     setIsProfileOpen(false);
   };
 
+  const [activeTab, setActiveTab] = useState('todo');
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">

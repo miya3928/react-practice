@@ -4,10 +4,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from "../supabase";
 import Calendar from 'react-calendar';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PlusCircle, Settings2 } from 'lucide-react'; // アイコン追加
 import 'react-calendar/dist/Calendar.css';
 import '../calendar-custom.css';
 
-export default function Todo({ user, activeTab}) {
+export default function Todo({ user, activeTab }) {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -24,6 +25,9 @@ export default function Todo({ user, activeTab}) {
   const [priorityInput, setPriorityInput] = useState("medium");
   const [dueDateInput, setDueDateInput] = useState(new Date().toISOString().split('T')[0]);
   const [tagInput, setTagInput] = useState("プライベート");
+
+  // ジャンル管理用のState（将来的にPython/DBと連携）
+  const [availableGenres, setAvailableGenres] = useState(['仕事', '学習', 'プライベート']);
 
   useEffect(() => { fetchTodos(); }, [user]);
 
@@ -82,7 +86,6 @@ export default function Todo({ user, activeTab}) {
   const activeTodos = filteredTodos.filter(t => !t.done);
   const completedTodos = filteredTodos.filter(t => t.done);
 
-  // 件数バッジ
   const counts = {
     all: todos.length,
     active: todos.filter(t => !t.done).length,
@@ -90,42 +93,44 @@ export default function Todo({ user, activeTab}) {
   };
 
   // --- Calendar Helpers ---
-  const getTileClassName = ({ date, view }) => {
-    if (view !== 'month') return "";
-    const day = date.getDay();
-    if (day === 0) return "tile-sunday-holiday"; // 日曜日
-    if (day === 6) return "tile-saturday";      // 土曜日
-    return "";
-  };
-
   const renderTileContent = ({ date, view }) => {
     if (view !== 'month') return null;
     const dateStr = date.toLocaleDateString('sv-SE');
     const dailyTasks = todos.filter(t => t.due_date === dateStr && !t.done);
     const count = dailyTasks.length;
-
     if (count === 0) return null;
-    if (count >= 5) return <div className="task-badge">{count}</div>;
-
-    const dotColor = count >= 3 ? "bg-orange-400" : "bg-indigo-400";
     return (
       <div className="task-dot-container">
-        <div className={`task-dot ${dotColor}`} />
+        <div className={`task-dot ${count >= 3 ? "bg-orange-400" : "bg-indigo-400"}`} />
       </div>
     );
   };
 
-  const chartData = [
-    { name: '仕事', value: todos.filter(t => t.tag === '仕事').length, color: '#4f46e5' },
-    { name: '学習', value: todos.filter(t => t.tag === '学習').length, color: '#a855f7' },
-    { name: 'プライベート', value: todos.filter(t => t.tag === 'プライベート').length, color: '#22c55e' },
-  ].filter(d => d.value > 0);
+  const chartData = availableGenres.map(genre => ({
+    name: genre,
+    value: todos.filter(t => t.tag === genre).length,
+    color: genre === '仕事' ? '#4f46e5' : genre === '学習' ? '#a855f7' : '#22c55e'
+  })).filter(d => d.value > 0);
 
   const progress = todos.length === 0 ? 0 : Math.round((todos.filter(t => t.done).length / todos.length) * 100);
 
   return (
-    <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 p-2">
-      <div className="flex-grow space-y-6 lg:w-2/3">
+    <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 p-2 mb-20 md:mb-0">
+      
+      {/* --- メインコンテンツ：タスク一覧 (スマホでは 'todo' タブの時のみ表示) --- */}
+      <div className={`${activeTab === 'todo' ? 'block' : 'hidden lg:block'} flex-grow space-y-6 lg:w-2/3`}>
+        
+        {/* プログレスバー (スマホのTodoタブでも見たいのでここに移動) */}
+        <div className="lg:hidden bg-indigo-600 p-6 rounded-3xl text-white shadow-lg mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-black text-xs uppercase">Progress</h3>
+            <span className="text-xl font-black">{progress}%</span>
+          </div>
+          <div className="h-1.5 bg-indigo-400/50 rounded-full overflow-hidden">
+            <motion.div animate={{ width: `${progress}%` }} className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+          </div>
+        </div>
+
         {/* 入力フォーム */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
           <div className="flex flex-wrap gap-4 pb-4 border-b border-gray-50 mb-2">
@@ -140,9 +145,9 @@ export default function Todo({ user, activeTab}) {
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-gray-400 mb-1 uppercase">ジャンル</span>
               <select value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="bg-gray-50 p-2 rounded-xl text-xs font-bold outline-none">
-                <option value="仕事">💼 仕事</option>
-                <option value="学習">📚 学習</option>
-                <option value="プライベート">🏠 プライベート</option>
+                {availableGenres.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col">
@@ -158,9 +163,9 @@ export default function Todo({ user, activeTab}) {
 
         {/* フィルタ & ソートバー */}
         <div className="bg-white/50 p-4 rounded-3xl border border-gray-100 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-2">
-            {['すべて', '仕事', '学習', 'プライベート'].map(g => (
-              <button key={g} onClick={() => setFilterGenre(g)} className={`px-4 py-1.5 rounded-full text-[10px] font-black transition-all ${filterGenre === g ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-400 hover:bg-gray-100'}`}>{g}</button>
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {['すべて', ...availableGenres].map(g => (
+              <button key={g} onClick={() => setFilterGenre(g)} className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[10px] font-black transition-all ${filterGenre === g ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-400 hover:bg-gray-100'}`}>{g}</button>
             ))}
           </div>
           <div className="flex items-center gap-2">
@@ -176,11 +181,7 @@ export default function Todo({ user, activeTab}) {
         {/* タスクリストエリア */}
         <div className="space-y-4">
           <div className="flex gap-6 px-2">
-            {[
-              { id: 'all', label: 'すべて', count: counts.all },
-              { id: 'active', label: '実行中', count: counts.active },
-              { id: 'completed', label: '完了済', count: counts.completed },
-            ].map((s) => (
+            {[{ id: 'all', label: 'すべて', count: counts.all }, { id: 'active', label: '実行中', count: counts.active }, { id: 'completed', label: '完了済', count: counts.completed }].map((s) => (
               <button key={s.id} onClick={() => setFilterStatus(s.id)} className={`relative pb-2 text-xs font-black uppercase transition-all ${filterStatus === s.id ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
                 {s.label} <span className="ml-1 opacity-50">{s.count}</span>
                 {filterStatus === s.id && <motion.div layoutId="underline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />}
@@ -196,7 +197,7 @@ export default function Todo({ user, activeTab}) {
                 ))}
               </AnimatePresence>
             </ul>
-
+            {/* 完了済み表示ロジックは以前と同じ（省略せずに実装） */}
             {completedTodos.length > 0 && (
               <div className="space-y-3">
                 <button onClick={() => setIsCompletedOpen(!isCompletedOpen)} className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase hover:text-gray-600 transition-colors">
@@ -214,15 +215,16 @@ export default function Todo({ user, activeTab}) {
                 </AnimatePresence>
               </div>
             )}
-            
             {loading && <p className="text-center text-gray-400 py-10">読み込み中...</p>}
           </div>
         </div>
       </div>
 
-      {/* サイドバー */}
+      {/* --- サイドバー：カレンダー・分析・設定 --- */}
       <div className="w-full lg:w-80 space-y-6">
-        <div className="bg-indigo-600 p-6 rounded-3xl text-white shadow-lg">
+        
+        {/* Progress (PC用) */}
+        <div className="hidden lg:block bg-indigo-600 p-6 rounded-3xl text-white shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-black text-sm uppercase">Progress</h3>
             <span className="text-2xl font-black">{progress}%</span>
@@ -232,20 +234,14 @@ export default function Todo({ user, activeTab}) {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        {/* カレンダー (スマホでは 'calendar' タブ時のみ) */}
+        <div className={`${activeTab === 'calendar' ? 'block' : 'hidden lg:block'} bg-white p-6 rounded-3xl shadow-sm border border-gray-100`}>
            <h3 className="text-xs font-black text-gray-400 mb-4 uppercase">Calendar</h3>
-           <Calendar 
-             onChange={(date) => { setSelectedDate(date); setIsFilterByDate(true); }} 
-             value={selectedDate} 
-             locale="ja-JP"
-             formatDay={(locale, date) => date.getDate()} 
-             tileContent={renderTileContent}
-             tileClassName={getTileClassName}
-             className="border-none w-full"
-           />
+           <Calendar onChange={(date) => { setSelectedDate(date); setIsFilterByDate(true); }} value={selectedDate} locale="ja-JP" formatDay={(l, d) => d.getDate()} tileContent={renderTileContent} className="border-none w-full" />
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        {/* 分析 (スマホでは 'analysis' タブ時のみ) */}
+        <div className={`${activeTab === 'analysis' ? 'block' : 'hidden lg:block'} bg-white p-6 rounded-3xl shadow-sm border border-gray-100`}>
           <h3 className="text-xs font-black text-gray-400 mb-2 uppercase">Genre Analysis</h3>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -253,12 +249,52 @@ export default function Todo({ user, activeTab}) {
                 <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                   {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
+                <Tooltip />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* 設定：ジャンル追加 (スマホでは 'settings' タブ時のみ) */}
+        <div className={`${activeTab === 'settings' ? 'block' : 'hidden lg:block'} bg-white p-6 rounded-3xl shadow-sm border border-gray-100`}>
+           <div className="flex items-center gap-2 mb-4">
+             <Settings2 size={16} className="text-gray-400" />
+             <h3 className="text-xs font-black text-gray-400 uppercase">Manage Genres</h3>
+           </div>
+           
+           <div className="space-y-3">
+             <div className="flex gap-2">
+               <input 
+                 id="new-genre-input"
+                 className="flex-grow bg-gray-50 p-2 rounded-xl text-xs outline-none focus:ring-2 ring-indigo-500/20" 
+                 placeholder="新ジャンル名..." 
+               />
+               <button 
+                onClick={() => {
+                  const input = document.getElementById('new-genre-input');
+                  if (input.value) {
+                    setAvailableGenres([...availableGenres, input.value]);
+                    input.value = "";
+                  }
+                }}
+                className="bg-indigo-50 text-indigo-600 p-2 rounded-xl"
+               >
+                 <PlusCircle size={20} />
+               </button>
+             </div>
+             
+             <div className="flex flex-wrap gap-2">
+               {availableGenres.map(genre => (
+                 <span key={genre} className="text-[10px] font-bold bg-gray-100 text-gray-500 px-3 py-1 rounded-full flex items-center gap-2">
+                   {genre}
+                   <button onClick={() => setAvailableGenres(availableGenres.filter(g => g !== genre))} className="hover:text-red-500 text-gray-300">✕</button>
+                 </span>
+               ))}
+             </div>
+           </div>
+        </div>
+
       </div>
     </div>
   );
