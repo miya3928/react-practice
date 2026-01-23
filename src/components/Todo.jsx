@@ -7,7 +7,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import 'react-calendar/dist/Calendar.css';
 import '../calendar-custom.css';
 
-export default function Todo({ user }) {
+export default function Todo({ user, activeTab}) {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
