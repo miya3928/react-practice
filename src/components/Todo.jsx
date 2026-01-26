@@ -13,7 +13,7 @@ export default function Todo({ user, activeTab }) {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isFilterByDate, setIsFilterByDate] = useState(false);
-  
+
   // フィルタ・表示制御
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterGenre, setFilterGenre] = useState("すべて");
@@ -116,10 +116,10 @@ export default function Todo({ user, activeTab }) {
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 p-2 mb-20 md:mb-0">
-      
+
       {/* --- メインコンテンツ：タスク一覧 (スマホでは 'todo' タブの時のみ表示) --- */}
       <div className={`${activeTab === 'todo' ? 'block' : 'hidden lg:block'} flex-grow space-y-6 lg:w-2/3`}>
-        
+
         {/* プログレスバー (スマホのTodoタブでも見たいのでここに移動) */}
         <div className="lg:hidden bg-indigo-600 p-6 rounded-3xl text-white shadow-lg mb-4">
           <div className="flex justify-between items-center mb-2">

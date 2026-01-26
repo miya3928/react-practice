@@ -1,31 +1,27 @@
 // src/App.jsx
 import { useState, useEffect } from 'react';
-import './index.css';
-import { supabase } from "./supabase"; // 接続設定ファイル
+import { supabase } from "./supabase";
 import Header from "./components/Header.jsx";
 import Main from "./components/Main.jsx";
 import Footer from "./components/Footer.jsx";
-import Auth from "./components/Auth.jsx"; // 新しいAuthコンポーネント
+import Auth from "./components/Auth.jsx";
 import Todo from "./components/Todo.jsx";
-import Profile from "./components/Profile.jsx";
 import BottomNav from "./components/BottomNav.jsx";
+import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
+  // 1. Stateはすべて一番上にまとめる
   const [session, setSession] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('todo'); // ここで定義
 
-  // Supabaseのログイン状態を監視
   useEffect(() => {
-    // 現在のログインセッションを取得
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-
-    // ログイン・ログアウトの変化をリッスン
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -34,12 +30,8 @@ function App() {
     setIsProfileOpen(false);
   };
 
-  const [activeTab, setActiveTab] = useState('todo');
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* ログインユーザーがいれば情報を渡す、いなければ null */}
-      {/* App.jsx の Header への渡し方 */}
       <Header
         user={session?.user ? {
           ...session.user,
@@ -49,32 +41,34 @@ function App() {
         onOpenProfile={() => setIsProfileOpen(true)}
       />
 
+      {/* pb-20 を入れることで、ボトムナビに隠れないようにする */}
+      <div className="flex-grow pb-20 md:pb-0">
         <Main>
           {session ? (
-            // activeTab を Todo コンポーネントに渡す
             <Todo user={session.user} activeTab={activeTab} />
           ) : (
             <Auth />
           )}
         </Main>
+      </div>
 
-        {/* プロフィールモーダル */}
-        {isProfileOpen && session && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-sm w-full relative shadow-2xl">
-              <button 
-                onClick={() => setIsProfileOpen(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
-              >✕</button>
-              <Profile user={session.user} />
-            </div>
-          </div>
+      {/* ログイン中かつスマホの時だけボトムナビを出す */}
+      <AnimatePresence>
+        {session && (
+          <motion.div
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            exit={{ y: 100 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+          >
+            <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        {/* ログイン中のみボトムナビを表示 */}
-      {session && <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />}
-
-      <Footer className="hidden md:block" /> {/* PCのみ表示 */}
+      {/* classNameをFooterに渡す */}
+      <Footer className="hidden md:block" />
     </div>
   );
 }
