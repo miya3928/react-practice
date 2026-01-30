@@ -5,7 +5,7 @@ import Header from "./components/Header.jsx";
 import Main from "./components/Main.jsx";
 import Footer from "./components/Footer.jsx";
 import Auth from "./components/Auth.jsx";
-import Todo from "./components/Todo.jsx";
+import Todo from "./components/todo/Todo.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import { AnimatePresence, motion } from 'framer-motion';
 

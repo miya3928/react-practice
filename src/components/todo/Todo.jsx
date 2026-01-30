@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { AnimatePresence } from 'framer-motion';
-import { supabase } from "../supabase";
+import { supabase } from "../../supabase";
 
 // 切り出したコンポーネントたちをインポート
-import TodoInput from "./todo/TodoInput";
-import TodoFilter from "./todo/TodoFilter";
-import TodoListArea from "./todo/TodoListArea";
-import ProgressCard from "./todo/ProgressCard";
-import CalendarCard from "./todo/CalendarCard";
-import Analysis from "./todo/Analysis";
-import GenreSettingsCard from "./todo/GenreSettingsCard";
+import TodoInput from "./TodoInput";
+import TodoFilter from "./TodoFilter";
+import TodoListArea from "./TodoListArea";
+import Progress from "./Progress";
+import Calendar from "./Calendar";
+import Analysis from "./Analysis";
+import GenreSettings from "./GenreSettings";
 
 export default function Todo({ user, activeTab }) {
   const [todos, setTodos] = useState([]);
@@ -49,7 +49,7 @@ export default function Todo({ user, activeTab }) {
       
       {/* メインエリア (Todoリスト側) */}
       <div className={`${activeTab === 'todo' ? 'block' : 'hidden lg:block'} flex-grow space-y-6 lg:w-2/3`}>
-        <ProgressCard progress={calculateProgress(todos)} isMobile={true} />
+        <Progress progress={calculateProgress(todos)} isMobile={true} />
         
         <TodoInput user={user} availableGenres={availableGenres} onAdd={(newTodo) => setTodos([newTodo, ...todos])} />
         
@@ -77,22 +77,22 @@ export default function Todo({ user, activeTab }) {
 
       {/* サイドバーエリア (カレンダー・分析・設定) */}
       <div className="w-full lg:w-80 space-y-6">
-        <ProgressCard progress={calculateProgress(todos)} isMobile={false} />
-        
-        <CalendarCard 
+        <Progress progress={calculateProgress(todos)} isMobile={false} />
+
+        <Calendar
           activeTab={activeTab} 
           todos={todos} 
           selectedDate={selectedDate} 
           setSelectedDate={(date) => { setSelectedDate(date); setIsFilterByDate(true); }} 
         />
 
-        <AnalysisCard 
+        <Analysis 
           activeTab={activeTab} 
           todos={todos} 
           availableGenres={availableGenres} 
         />
 
-        <GenreSettingsCard 
+        <GenreSettings
           activeTab={activeTab} 
           availableGenres={availableGenres} 
           setAvailableGenres={setAvailableGenres} 
